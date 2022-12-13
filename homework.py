@@ -91,7 +91,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Извлекает статус о ДЗ"""
+    """Извлекает статус о ДЗ."""
     if "homework_name" not in homework:
         message = 'Отсутствует ключ "homework_name".'
         raise KeyError(message)
