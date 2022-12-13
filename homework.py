@@ -85,7 +85,7 @@ def check_response(response):
         raise exceptions.CheckResponseException(message)
     hw_list = response["homeworks"]
     if type(hw_list) != list:
-        message = f"Тип данных от API не в виде списка: {type(hw_list)}"
+        message = f"Формат данных от API не в виде списка: {type(hw_list)}"
         raise TypeError(message)
     return hw_list
 
