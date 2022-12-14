@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -9,6 +10,7 @@ import telegram
 from dotenv import load_dotenv
 
 import exceptions
+from settings import ENDPOINT
 
 load_dotenv()
 
@@ -17,7 +19,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("PRACTICUM_TOKEN")
 
 RETRY_PERIOD: int = 600
-ENDPOINT = "https://practicum.yandex.ru/api/user_api/homework_statuses/"
+
 HEADERS = {"Authorization": f"OAuth {PRACTICUM_TOKEN}"}
 
 HOMEWORK_VERDICTS = {
@@ -70,18 +72,20 @@ def get_api_answer(timestamp):
         raise exceptions.GetAPIAnswerException(message)
     try:
         return hw_statuses.json()
-    except Exception as error:
+    except json.decoder.JSONDecodeError as error:
         message = f"Ошибка преобразования к типам данных Python {error}"
         raise exceptions.GetAPIAnswerException(message)
 
 
 def check_response(response):
     """Проверяет ответ API на соответствие документации."""
-    if type(response) != dict:
-        message = f"Не верный тип данных от сервера: {type(response)}"
+    if not isinstance(response, dict):
+        message = f"Не верный тип данных, ожидаемый: {type(response)}"
         raise TypeError(message)
-    if "homeworks" not in response:
-        message = 'Отсутствует ключ "homeworks".'
+    if 'current_date' and 'homeworks' not in response:
+        message = (
+            'API вернул неожидаемое значение, отсутствует ключ `homework`'
+        )
         raise exceptions.CheckResponseException(message)
     hw_list = response["homeworks"]
     if type(hw_list) != list:
@@ -92,13 +96,12 @@ def check_response(response):
 
 def parse_status(homework):
     """Извлекает статус о ДЗ."""
-    if "homework_name" not in homework:
-        message = 'Отсутствует ключ "homework_name".'
+    if "status" and "homework_name" not in homework:
+        message = (
+            'Отсутствуют ключи `homework_name` и `status` для проверки ДЗ'
+        )
         raise KeyError(message)
-    if "status" not in homework:
-        message = 'Отсутствует ключ "status".'
-        raise KeyError(message)
-    homework_name = homework["homework_name"]
+    homework_name = homework.get("homework_name")
     homework_status = homework["status"]
     if homework_status in HOMEWORK_VERDICTS:
         verdict = HOMEWORK_VERDICTS[homework_status]
@@ -112,7 +115,7 @@ def main():
     """Основная логика работы бота."""
     if not check_tokens():
         message = "Отсутствует обязательная переменная окружения."
-        logger.critical(message)
+        logging.critical(message)
         sys.exit("Работа бота завершена.")
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
@@ -135,7 +138,7 @@ def main():
                     send_message(bot, homework_status)
         except Exception as error:
             message = f"Сбой в работе программы: {error}"
-            logger.error(message)
+            logging.error(message)
             if current_error != str(error):
                 current_error = str(error)
                 send_message(bot, message)
