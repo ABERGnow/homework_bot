@@ -47,8 +47,8 @@ def check_tokens():
 def send_message(bot, message):
     """Отправляет сообщение в Telegram чат."""
     try:
+        bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.debug(f'Бот отправил сообщение: "{message}"')
-        return bot.send_message(TELEGRAM_CHAT_ID, message)
     except telegram.error.TelegramError as error:
         logging.error(f'Не удалось отправить сообщение: "{error}"')
         raise exceptions.SendMessageException(error)
@@ -66,9 +66,8 @@ def get_api_answer(timestamp):
     except Exception as error:
         message = f"Ошибка {error} при запросе к {ENDPOINT}"
         raise exceptions.GetAPIAnswerException(message)
-    status = hw_statuses.status_code
-    if status != HTTPStatus.OK:
-        message = f"Результа запроса к API: {status}"
+    if hw_statuses.status_code != HTTPStatus.OK:
+        message = f"Результа запроса к API: {hw_statuses.status_code}"
         raise exceptions.GetAPIAnswerException(message)
     try:
         return hw_statuses.json()
