@@ -88,8 +88,8 @@ def check_response(response):
         )
         raise exceptions.CheckResponseException(message)
     hw_list = response["homeworks"]
-    if type(hw_list) != list:
-        message = f"Формат данных от API не в виде списка: {type(hw_list)}"
+    if not isinstance(hw_list, list):
+        message = f"Не верный тип данных, ожидаемый: {type(hw_list)}"
         raise TypeError(message)
     return hw_list
 
@@ -101,8 +101,8 @@ def parse_status(homework):
             'Отсутствуют ключи `homework_name` и `status` для проверки ДЗ'
         )
         raise KeyError(message)
-    homework_name = homework.get("homework_name")
-    homework_status = homework["status"]
+    homework_name = homework.get('homework_name')
+    homework_status = homework.get('status')
     if homework_status in HOMEWORK_VERDICTS:
         verdict = HOMEWORK_VERDICTS[homework_status]
         return f'Изменился статус проверки работы "{homework_name}". {verdict}'
@@ -128,14 +128,13 @@ def main():
             response = get_api_answer(timestamp)
             homework = check_response(response)
             if not len(homework):
-                logger.info("Статус не обновлен")
+                logger.info("Статус проверки работы, не обновлен.")
             else:
                 homework_status = parse_status(homework[0])
-                if current_status == homework_status:
+                if current_status != homework_status:
                     logger.info(homework_status)
-                else:
-                    current_status = homework_status
                     send_message(bot, homework_status)
+                    current_status = homework_status
         except Exception as error:
             message = f"Сбой в работе программы: {error}"
             logging.error(message)
