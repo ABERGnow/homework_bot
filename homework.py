@@ -67,7 +67,7 @@ def get_api_answer(timestamp):
         message = f"Ошибка {error} при запросе к {ENDPOINT}"
         raise exceptions.GetAPIAnswerException(message)
     if hw_statuses.status_code != HTTPStatus.OK:
-        message = f"Результа запроса к API: {hw_statuses.status_code}"
+        message = f"Результат запроса к API: {hw_statuses.status_code}"
         raise exceptions.GetAPIAnswerException(message)
     try:
         return hw_statuses.json()
