@@ -7,7 +7,7 @@
 ### Как запустить
 - клонировать репозиторий, перейти в директорию проекта
 ```
-git clone git@github.com:viator3m/homework_bot.git
+git clone https://github.com/ABERGnow/homework_bot.git
 cd homework_bot
 ```
 - создать виртуальное окружение и установить [зависимости](requirements.txt)
